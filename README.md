@@ -117,13 +117,15 @@ docker exec -it master /usr/local/spark/bin/spark-shell \
 
 ### 推荐结果示例
 
+应用 ≥100 人过滤后，各用户的 Top-5：
+
 | 用户 | Top-5 推荐 | 预测得分 |
 |---|---|---|
-| 1 | Smashing Time (1967)、Saltmen of Tibet (1997)、Ulysses (1954)、Schindler's List (1993)、Shawshank Redemption (1994) | 4.59 ~ 4.76 |
-| 100 | Mamma Roma (1962)、Foreign Student (1994)、Schlafes Bruder (1995)、Ulysses (1954)、Schindler's List (1993) | 3.66 ~ 4.30 |
-| 6040 | Mamma Roma (1962)、Inheritors (1998)、Ed's Next Move (1996)、Lamerica (1994)、Mirror (1975) | 4.57 ~ 5.06 |
+| 1 | Searchers, The (1956)、Murphy's Romance (1985)、No Way Out (1987)、Birdy (1984)、High Noon (1952) | 4.92 ~ 5.27 |
+| 100 | Jean de Florette (1986)、Gold Rush, The (1925)、City Lights (1931)、It Happened One Night (1934)、Wizard of Oz, The (1939) | 4.11 ~ 4.27 |
+| 6040 | Ran (1985)、Paths of Glory (1957)、Citizen Kane (1941)、Seventh Seal, The (1957)、Dr. Strangelove (1963) | 4.77 ~ 4.86 |
 
-多名用户共享的影片分两类：`Ulysses`（全库仅 1 人评分）、`Mamma Roma`（2 人评分）属于样本过少导致的分数膨胀，并非真实的口味趋同；`Schindler's List`（2304 人评分、均分 4.51）属于群体共识，共享合理。
+未加过滤时，多名用户会共享 `Ulysses`（全库仅 1 人评分）、`Mamma Roma`（2 人评分）这类冷门片，属于样本过少导致的分数膨胀，并非真实的口味趋同；加入 ≥100 过滤后该现象消失，共享片变为跨用户公认的中等热度佳作。
 
 ## 目录结构
 
