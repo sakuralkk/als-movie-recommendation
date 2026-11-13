@@ -89,17 +89,21 @@ docker exec -it master /usr/local/spark/bin/spark-shell \
 
 两者均值相差 0.0012，小于一个标准差。**迭代 10 次已基本收敛**，增加到 20 次对精度没有实质影响。单次切分（seed=42）曾显示 iter=20 更差，换一种划分结论即不成立，说明单次评估的波动不可忽略。
 
-### 热门度过滤
+### 推荐策略：候选池过滤至 100 人评分
 
-无约束排序时，冷门影片的预测分会严重膨胀——用户 1 的 Top-1 是一部仅 11 人评分的电影，预测分 7.52（评分上限为 5）。按评分人数过滤候选池后：
+无约束排序时，冷门影片的预测分会严重膨胀——用户 1 的 Top-1 是一部仅 11 人评分的电影，预测分 7.52，而评分上限只有 5。原因是样本过少使 λ=0.01 的正则化压不住隐因子，模型为个别记录单独调高因子。
+
+**本项目最终采用"评分人数 ≥ 100"作为默认过滤条件**，只在该候选池内排序：
 
 | 过滤条件 | 可选影片 | 用户 1 的 Top-3 | 预测分 |
 |---|---|---|---|
 | 无过滤 | 3,674 | Land and Freedom [11]、Bewegte Mann [7]、Nil By Mouth [14] | 6.90 ~ 7.52 |
 | ≥ 50 人 | 2,361 | American Pop [81]、Searchers [188]、Trick [75] | 5.02 ~ 5.55 |
-| ≥ 100 人 | 1,849 | Searchers [188]、Murphy's Romance [213]、No Way Out [296] | 4.92 ~ 5.27 |
+| **≥ 100 人（默认）** | **1,849** | Searchers [188]、Murphy's Romance [213]、No Way Out [296] | **4.92 ~ 5.27** |
 
-方括号内为评分人数。样本过少使 λ=0.01 的正则化无法约束隐因子，模型为个别记录单独调高因子，导致预测分越过评分上限。过滤后分数回到合理区间，代价是候选池缩小，冷门佳作失去曝光机会。
+方括号内为评分人数。阈值选择的依据：取 50 时最高分仍有 5.55，依旧越界；取 100 压到 5.27，最贴近上限；再收紧到 200 则候选池只剩 1,216 部。
+
+代价是候选池从 3,674 部缩到 1,849 部，冷门佳作失去曝光机会，需要在覆盖度与可信度之间取舍。
 
 ### 排序指标
 
@@ -127,9 +131,11 @@ docker exec -it master /usr/local/spark/bin/spark-shell \
 .
 ├── README.md
 ├── src/
-│   ├── train_als.scala         # 基准训练与 RMSE 评估
-│   ├── tune_params.scala       # rank 与正则化对比
-│   └── evaluate_ranking.scala  # Precision@K / NDCG
+│   ├── train_als.scala           # 基准训练与 RMSE 评估
+│   ├── tune_params.scala         # rank 与正则化对比
+│   ├── check_seed_variance.scala # 多随机种子的测试集波动
+│   ├── popularity_filter.scala   # 候选池过滤（默认 ≥100 人）
+│   └── evaluate_ranking.scala    # Precision@K / NDCG
 └── scripts/
     └── upload_data.sh          # 数据集上传 HDFS
 ```
